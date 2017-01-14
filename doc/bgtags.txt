@@ -1,26 +1,103 @@
-*bgtags.txt* Plugin for generating and updating ctags in the background.
-
-Requirements~
-
-  * tags file in the current working directory. Other tags file locations are
-    not supported (yet?)
-
-Commands~
-
-  *BgtagsUpdateTags*
-
-    Regenerates the tags file for the current directory.
-
-  *BgtagsReset*
-
-    Resets the bgtags state, killing any child processes. Use this if things
-    get weird.
+*bgtags.txt* generate and updating tags in the background.
 
 
-                                                              *bgtags-settings*
+ _______     .-_'''-. ,---------.    ____      .-_'''-.      .-'''-.   ~
+\  ____  \  '_( )_   \\          \ .'  __ `.  '_( )_   \    / _     \  ~
+| |    \ | |(_ o _)|  '`--.  ,---'/   '  \  \|(_ o _)|  '  (`' )/`--'  ~
+| |____/ / . (_,_)/___|   |   \   |___|  /  |. (_,_)/___| (_ o _).     ~
+|   _ _ '. |  |  .-----.  :_ _:      _.-`   ||  |  .-----. (_,_). '.   ~
+|  ( ' )  \'  \  '-   .'  (_I_)   .'   _    |'  \  '-   .'.---.  \  :  ~
+| (_{;}_) | \  `-'`   |  (_(=)_)  |  _( )_  | \  `-'`   | \    `-'  |  ~
+|  (_,_)  /  \        /   (_I_)   \ (_ o _) /  \        /  \       /   ~
+/_______.'    `'-...-'    '---'    '.(_,_).'    `'-...-'    `-...-'    ~
+
+
+bgtags is a plugin that provides a user command, |BgtagsUpdateTags|, and a
+BufWritePost autocommand to update the tags file when a file is written.
+
+bgtags assumes your 'tags' file lives in the current working directory.
+
+=============================================================================
+Commands                                                      *bgtags-commands*
+
+*:BgtagsUpdateTags*
+
+  Regenerates the tags file for the current directory.
+
+*:BgtagsReset*
+
+Resets the bgtags state, killing any child processes. Use this if things get
+weird while working on custom user commands.
+
+=============================================================================
+Configuration                                                   *bgtags-config*
+
+*g:bgtags_enabled* (default 1)
+
+Set this to 0 to disable background tag refresh.
 
 *g:bgtags_user_commands*
 
-Use this to define how bgtags generates files. TODO.
+  This is a dictionary to customize how directory-level (that is, your current
+  working directory and its contents) tags are generated and how
+  filetype-specific (that is, a file you're editing and saving) is updated
+  within the tags file.
 
-vim:tw=78:ts=8:ft=help:norl:
+  "directories": a dictionary mapping top-level directories (e.g. ".git", for
+  git projects) to the command or commands used to generate the tags for that
+  kind of project (e.g. "git ls-files | ctags -L-"). You can set a "default"
+  key to override the default tags generation command, "ctags -R". The values
+  can be either a single string (for one command) or a List of strings for
+  multiple sequential commands. If there are multiple commands, they'll be run
+  in order, rather than in parallel -- make sure the second and later commands
+  append to the tags file rather than overwriting it!
+
+  "filetypes": a dictionary mapping filetype names to the commands required to
+  generate the tags for the given file. The commands are assumed to take the
+  filename as its last argument and output tags to STDOUT. bgtags itself will
+  remove the current file's tags from the tags file before invoking a
+  filetype-specific tags command to regenerate the tags. Print the tags to
+  STDOUT, and bgtags will do the rest. Set the "default" key to override the
+  fault single-file command "ctags -f-".
+
+*g:bgtags_debug* (default 0)
+
+  Set this to 1 to enable debug logging for the bgtags job processing.
+
+=============================================================================
+Examples                                                      *bgtags-examples*
+
+This is an explicit restatement of the built-in defaults:
+
+  let g:bgtags_user_commands = {
+  \ "directories": {
+    \ "default": "ctags -R"
+    \ },
+  \ "filetypes": {
+    \ "default": "ctags -f-"
+    \ }
+  \ }
+
+A more complex example that uses ripper-tags via rbenv for ruby files and
+ctags for everything else within git projects, and gnu parallel for processing
+multiple files at once:
+
+  let g:bgtags_user_commands = {
+    \ 'directories': {
+      \ '.git': [
+        \ 'git ls-files -c -o --exclude-standard | ' .
+          \ 'egrep -v ''\.rb$|\.git/'' | ' .
+          \ 'parallel -j200\% -N 500 --pipe ''ctags -L - -f -'' > tags',
+        \ 'eval "$(rbenv init -)" && rbenv shell $(rbenv global) && ' .
+          \ 'git ls-files -c -o --exclude-standard | ' .
+          \ 'egrep ''\.rb$'' | ' .
+          \ 'parallel -X ''ripper-tags -f - {}'' >> tags'
+        \ ],
+      \ },
+    \ 'filetypes': {
+      \ 'ruby': 'eval "$(rbenv init -)" && rbenv shell $(rbenv global) && ' .
+          \ 'ripper-tags -f -',
+      \}
+  \ }
+
+vim:tw=78:ts=2:ft=help:norl:

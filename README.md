@@ -14,4 +14,4 @@ Use [pathogen](https://github.com/tpope/vim-pathogen/) and clone this repo to `~
 
 `:BgtagsUpdateTags` regenerates the tags for your project.
 
-`:help bgtags` for more.
+[`:help bgtags`](./doc/bgtags.txt) for more.
