@@ -1,0 +1,26 @@
+*bgtags.txt* Plugin for generating and updating ctags in the background.
+
+Requirements~
+
+  * tags file in the current working directory. Other tags file locations are
+    not supported (yet?)
+
+Commands~
+
+  *BgtagsUpdateTags*
+
+    Regenerates the tags file for the current directory.
+
+  *BgtagsReset*
+
+    Resets the bgtags state, killing any child processes. Use this if things
+    get weird.
+
+
+                                                              *bgtags-settings*
+
+*g:bgtags_user_commands*
+
+Use this to define how bgtags generates files. TODO.
+
+vim:tw=78:ts=8:ft=help:norl:
