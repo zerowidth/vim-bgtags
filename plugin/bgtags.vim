@@ -3,21 +3,18 @@ if exists('g:loaded_bgtags_plugin')
 endif
 let g:loaded_bgtags_plugin = 1
 
-let g:bgtags_user_commands = {
-  \ 'directories': {
-    \ '.git': 'git ls-files -c -o --exclude-standard | ctags -L - -f - > tags',
-    \ 'default': 'ctags -R'
-    \ },
-  \ 'filetypes': {
-    \ 'ruby': 'ctags -f-',
-    \ 'default': 'ctags -f-'
-    \}
-\ }
+if !exists('g:bgtags_enabled')
+  let g:bgtags_enabled = 1
+endif
+
+if !exists('g:bgtags_debug')
+  let g:bgtags_debug = 0
+endif
 
 command! BgtagsUpdateTags call bgtags#UpdateTags()
 command! BgtagsReset call bgtags#Reset()
 
 augroup bgtags
   au!
-  autocmd BufWritePost * call bgtags#UpdateTagsForFile(expand('%'))
+  autocmd BufWritePost * if g:bgtags_enabled | call bgtags#UpdateTagsForFile(expand('%')) | endif
 augroup END
