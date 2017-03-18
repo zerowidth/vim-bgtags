@@ -77,10 +77,15 @@ function! s:process()
       echo 'tags updated.' | redraw
       return
     endif
+    if exists('s:timer')
+      call timer_stop(s:timer)
+      unlet s:timer
+    endif
     call s:debug('running ' . cmd)
     let s:command = cmd
     let s:job = job_start(['sh', '-c', cmd],
           \ {'callback': 'bgtags#EchoHandler', 'exit_cb': 'bgtags#ExitHandler'})
+    let s:timer = timer_start(g:bgtags_timeout, 'bgtags#TimeoutHandler')
   else
     call s:debug('queue clear, done')
   endif
@@ -101,6 +106,14 @@ function! bgtags#ExitHandler(job, status)
     call s:process()
   endif
 endfunc
+
+function! bgtags#TimeoutHandler(timer_id)
+  if exists('s:job')
+    echomsg 'timeout while generating tags, killing command: ' . s:command
+    call job_stop(s:job, "kill")
+    unlet s:timer
+  endif
+endfunction
 
 function! s:fetch(dict, key, default)
   if has_key(a:dict, a:key)
