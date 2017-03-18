@@ -1,5 +1,3 @@
-let s:job = 0
-let s:command = ""
 let s:queue = []
 
 function! bgtags#UpdateTags()
@@ -32,11 +30,15 @@ function! bgtags#UpdateTagsForFile(file)
 endfunction
 
 function! bgtags#Reset()
-  if type(s:job) == v:t_job
+  if exists('s:job')
     call job_stop(s:job, "kill")
+    unlet s:job
+    unlet s:command
   endif
-  let s:job = 0
-  let s:command = ""
+  if exists('s:timer')
+    call timer_stop(s:timer)
+    unlet s:timer
+  endif
   let s:queue = []
 endfunction
 
@@ -69,7 +71,7 @@ endfunction
 
 function! s:process()
   call s:debug('processing queue: ' . string(s:queue))
-  if type(s:job) == v:t_job
+  if exists('s:job')
     call s:debug('job still running')
     return
   endif
@@ -79,10 +81,15 @@ function! s:process()
       echo 'tags updated.' | redraw
       return
     endif
+    if exists('s:timer')
+      call timer_stop(s:timer)
+      unlet s:timer
+    endif
     call s:debug('running ' . cmd)
     let s:command = cmd
     let s:job = job_start(['sh', '-c', cmd],
           \ {'callback': 'bgtags#EchoHandler', 'exit_cb': 'bgtags#ExitHandler'})
+    let s:timer = timer_start(g:bgtags_timeout, 'bgtags#TimeoutHandler')
   else
     call s:debug('queue clear, done')
   endif
@@ -94,8 +101,8 @@ function! bgtags#EchoHandler(channel, msg)
 endfunction
 
 function! bgtags#ExitHandler(job, status)
-  let s:job = 0
-  let s:command = ''
+  unlet s:job
+  unlet s:command
   if a:status != 0
     echomsg 'error while generating tags! exit status ' . a:status
     let s:queue = []
@@ -103,6 +110,14 @@ function! bgtags#ExitHandler(job, status)
     call s:process()
   endif
 endfunc
+
+function! bgtags#TimeoutHandler(timer_id)
+  if exists('s:job')
+    echomsg 'timeout while generating tags, killing command: ' . s:command
+    call job_stop(s:job, "kill")
+    unlet s:timer
+  endif
+endfunction
 
 function! s:fetch(dict, key, default)
   if has_key(a:dict, a:key)

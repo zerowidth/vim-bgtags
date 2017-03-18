@@ -7,6 +7,11 @@ if !exists('g:bgtags_enabled')
   let g:bgtags_enabled = 1
 endif
 
+" timeout in milliseconds
+if !exists('g:bgtags_timeout')
+  let g:bgtags_timeout = 30000
+endif
+
 if !exists('g:bgtags_debug')
   let g:bgtags_debug = 0
 endif
