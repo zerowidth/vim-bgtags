@@ -32,9 +32,13 @@ endfunction
 function! bgtags#Reset()
   if exists('s:job')
     call job_stop(s:job, "kill")
+    unlet s:job
+    unlet s:command
   endif
-  unlet s:job
-  unlet s:command
+  if exists('s:timer')
+    call timer_stop(s:timer)
+    unlet s:timer
+  endif
   let s:queue = []
 endfunction
 
