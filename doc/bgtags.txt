@@ -60,6 +60,10 @@ Set this to 0 to disable background tag refresh.
   STDOUT, and bgtags will do the rest. Set the "default" key to override the
   fault single-file command "ctags -f-".
 
+*g:bgtags_timeout* (default 30000)
+
+  The timeout in milliseconds to allow a job to run before it is killed.
+
 *g:bgtags_debug* (default 0)
 
   Set this to 1 to enable debug logging for the bgtags job processing.
