@@ -19,6 +19,9 @@ function! bgtags#UpdateTagsForFile(file)
   if !filereadable('tags')
     return
   endif
+  if !filereadable(a:file)
+    return
+  endif
   let filename = shellescape(a:file)
   let remove = 'grep -v ''\t' . filename[1:-1] . ' tags > tags.new && ' .
         \ 'mv -f tags.new tags >/dev/null'
