@@ -89,13 +89,11 @@ multiple files at once:
   let g:bgtags_user_commands = {
     \ 'directories': {
       \ '.git': [
-        \ 'git ls-files -c -o --exclude-standard | ' .
-          \ 'egrep -v ''\.rb$|\.git/'' | ' .
+        \ 'git ls-files -c -o --exclude-standard '':^*.rb'' '':^*.rake'' '':^*.git'' | ' .
           \ 'parallel -j200\% -N 500 --pipe ''ctags -L - -f -'' > tags',
         \ 'eval "$(rbenv init -)" && rbenv shell $(rbenv global) && ' .
-          \ 'git ls-files -c -o --exclude-standard | ' .
-          \ 'egrep ''\.rb$'' | ' .
-          \ 'parallel -X ''ripper-tags -f - {}'' >> tags'
+          \ 'git ls-files -c -o --exclude-standard '':^*.rb'' '':^*.rake'' '':^*.git'' | ' .
+          \ 'parallel -X -L200 ''ripper-tags -f - {}'' >> tags'
         \ ],
       \ },
     \ 'filetypes': {
