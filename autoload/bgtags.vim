@@ -22,7 +22,7 @@ function! bgtags#UpdateTagsForFile(file)
   endif
   let filename = shellescape(a:file)
   let remove = 'grep -v ''\t' . filename[1:-1] . ' tags > tags.new && ' .
-        \ 'mv -f tags.new tags >/dev/null'
+        \ 'mv -f tags.new tags >/dev/null || true'
   call add(s:queue, remove)
   let restore = s:FiletypeCommand()
   call add(s:queue, restore . ' ' . filename . ' >> tags')
