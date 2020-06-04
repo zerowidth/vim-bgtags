@@ -29,6 +29,10 @@ function! bgtags#UpdateTagsForFile(file)
   call s:process()
 endfunction
 
+function! bgtags#Active()
+  return exists('s:job')
+endfunction
+
 function! bgtags#Reset()
   if exists('s:job')
     call job_stop(s:job, "kill")
